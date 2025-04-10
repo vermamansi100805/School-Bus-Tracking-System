@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bus Tracking: Mulund Station West → Thane Lokmanya Nagar</title>
+
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=Your_Api_Key&libraries=places&callback=initMap" async defer></script>
+
+    <style>
+        #map { height: 500px; width: 100%; }
+    </style>
+</head>
+<body>
+
+    <h2>Live Bus Tracking - Mulund Station West to Thane Lokmanya Nagar</h2>
+    <div id="map"></div>
+    <script>
+        let map, busMarker;
+        let currentIndex = 0;
+        let direction = 1; // 1 = Forward, -1 = Backward
+        let busNo = 102;
+        let busStarted = false;
+
+        // ✅ Stops List (Bus Route)
+        let stops = [
+            { name: "Mulund Railway Station (West)", lat: 19.172493734949025, lng: 72.95616566560044 },
+            { name: "Ambaji Dham", lat: 19.178820571160976, lng: 72.94895764444415 },
+            { name: "E.S.I.S Hospital", lat: 19.178676553579688, lng: 72.94498979990995 },
+            { name: "Veena Nagar", lat: 19.182122272352903, lng: 72.94706828882978 },
+            { name: "Santoshi Mata Mandir (Mulund W)", lat: 19.18328117982267, lng: 72.94832348499398 },
+            { name: "R Mall, Mulund", lat: 19.183676258231596, lng: 72.95208405642035 },
+            { name: "Maharana Pratap Chowk", lat: 19.184244760305088, lng: 72.95380620919433 },
+            { name: "LBS Marg", lat: 19.184869027565096, lng: 72.9550116180224 },
+            { name: "Check naka", lat: 19.185474467428204, lng: 72.95576465887197 },
+            { name: "Automatic Company", lat: 19.187176753314446, lng: 72.95534730094457 },
+            { name: "MIDC", lat: 19.190317107739872, lng: 72.95552099792444 },
+            { name: "Road No 12", lat: 19.192467107093474, lng: 72.9551356108609 },
+            { name: "Road Number 16", lat: 19.193810123615314, lng: 72.95363597192922 },
+            { name: "Dwarka hotel", lat: 19.194601173359036, lng: 72.95105630486597 },
+            { name: "22 Circle", lat: 19.19473465197042, lng: 72.94923709217157 },
+            { name: "Sathe nagar", lat: 19.201024253219344, lng: 72.94904346612762 },
+            { name: "Indira nagar", lat: 19.20503526516572, lng: 72.95002481263808 },
+            { name: "Sawarkar nagar", lat: 19.207327809492835, lng: 72.95063547797781 },
+            { name: "Lokmanya Nagar (Thane)", lat: 19.20938340143996, lng: 72.95175942558431 }
+        ];
+
+        // ✅ Initialize Google Map
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: stops[0],
+                zoom: 15
+            });
+
+            // ✅ Add Bus Stops Markers
+            stops.forEach((stop, index) => {
+                new google.maps.Marker({
+                    position: stop,
+                    map: map,
+                    label: `${index + 1}`,
+                    title: stop.name
+                });
+            });
+
+            // ✅ Draw Route Line
+            let routeLine = new google.maps.Polyline({
+                path: stops.map(stop => ({ lat: stop.lat, lng: stop.lng })),
+                geodesic: true,
+                strokeColor: "#FF0000",
+                strokeOpacity: 1.0,
+                strokeWeight: 4
+            });
+            routeLine.setMap(map);
+
+            // ✅ Bus Marker
+            busMarker = new google.maps.Marker({
+                position: stops[0],
+                map: map,
+                icon: {
+                    url: "https://maps.google.com/mapfiles/ms/icons/bus.png",
+                    scaledSize: new google.maps.Size(40, 40)
+                },
+                title: "102 Bus"
+            });
+
+            moveBus(); // Start moving the bus
+        }
+
+        // ✅ Function to Move Bus Smoothly
+        async function moveBus() {
+            if (!busStarted) {
+                busStarted = true;
+                sendStartEmail(busNo);
+            }
+
+            while (true) {
+                let nextIndex = currentIndex + direction;
+
+                if (nextIndex >= stops.length || nextIndex < 0) {
+                    direction *= -1; // Change direction at the end stops
+                    nextIndex = currentIndex + direction;
+                }
+
+                await smoothMove(busMarker, stops[currentIndex], stops[nextIndex], 15000); // 15 sec travel time
+                currentIndex = nextIndex;
+
+                console.log(`Bus arrived at: ${stops[currentIndex].name}`);
+
+                // ✅ Send Email on Arrival
+                sendEmail(stops[currentIndex].name, busNo);
+
+                // ✅ Wait at Stop for 1 Minute
+                await delay(60000);
+            }
+        }
+
+        // ✅ Function to Move Smoothly Between Stops
+        function smoothMove(marker, from, to, duration) {
+            return new Promise(resolve => {
+                let start = new Date().getTime();
+                let interval = setInterval(() => {
+                    let elapsed = new Date().getTime() - start;
+                    let fraction = elapsed / duration;
+
+                    if (fraction >= 1) {
+                        clearInterval(interval);
+                        marker.setPosition(to);
+                        map.setCenter(to);
+                        resolve();
+                    } else {
+                        let lat = from.lat + (to.lat - from.lat) * fraction;
+                        let lng = from.lng + (to.lng - from.lng) * fraction;
+                        marker.setPosition({ lat, lng });
+                        map.setCenter({ lat, lng });
+                    }
+                }, 20);
+            });
+        }
+        // ✅ Send Start Email
+        function sendStartEmail(busNo) {
+            fetch('send_email_start.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bus_no: busNo })
+            });
+        }
+
+        // ✅ Send Email
+        function sendEmail(busStop, busNo) {
+            fetch('send_email.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bus_stop: busStop, bus_no: busNo })
+            });
+        }
+
+        
+
+        // ✅ Delay Function
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+       
+    </script>
+
+</body>
+</html>

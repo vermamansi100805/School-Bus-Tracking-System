@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Website</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+*{
+padding: 0;
+margin: 0;
+font-family: 'Josefin Sans',sans-serif;
+box-sizing: border-box;
+} 
+.sub-header{
+    height:50vh ;
+    width: 100%;
+    background-image:linear-gradient(rgba(4,9,30,0.7),rgba(4,9,30,0.7)) ,
+    url(image/trackimg.png);
+    background-position: center;
+    background-size: cover;
+    text-align: center;
+    color: white;
+}
+.about-us{
+    width: 100%;
+    padding: 78px 0px;
+    background-color: #191919;
+}
+.about-us img{
+    height: auto;
+    width: 420px;
+}
+.about-text{
+ width: 550px;
+}
+.main{
+    width: 1130px;
+    max-width: 95%;
+    margin:0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+.about-text h1{
+    color: white;
+    font-size: 50px;
+    text-transform: capitalize;
+    margin-bottom: 20px;
+   }
+.about-text h5{
+    color: white;
+    font-size: 25px;
+    text-transform: capitalize;
+    margin-bottom: 25px;
+    letter-spacing: 2px;
+}
+span{
+    color: #f9004d;
+}
+.about-text p{
+    color: #fcfc;
+    letter-spacing: 1px;
+    line-height: 28px;
+    font-size: 18px;
+    margin-bottom: 45px;
+}
+</style>
+</head>
+<body>
+    <section class="sub-header">
+        <nav>
+            <a href="index.html"><img src="image/logo.jpg"></a>
+            <div class="nav-links">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </nav> 
+    </section>
+    <!--about us-->
+    <section class="about-us">
+        <div class="main">
+            <img src="image/img3.webp" height="300" width="300">
+            <div class="about-text">
+                <h1>About Us</h1>
+                <h5>Efficient Operations<span>& Safe Students</span> & Relaxed Parents</h5>
+                <p>
+                Our mission has motivated us go beyond our limitations to improve school
+                bus administrator capabilities.Our creative think tank and development team
+                does this by creating groundbreaking and sustainable features that produce
+                positive outcomes for all stakeholders.The school administration can monitor
+                the movement of the bus in real-time.With the help of live GPS tracking,
+                the latest location updates can be viewed on the map. It allows the management 
+                to spot any deviation from the route and inquire the driver about it. 
+                Due to strict observation, the driver efficiency increases resulting in better productivity.</p>
+            </div>
+        </div>
+    </section>
+        <!-------------footer--------------->
+    <section class="footer">
+        <h4>About Us</h4>
+        <p>
+            It is the primary feature required in any bus tracking system is knowing the real-time
+            <br>location of the vehicle.This can be true bliss for working parents. 
+        </p>
+        <div class="icons">
+            <i class="fa fa-facebook" aria-hidden="true"></i>
+            <i class="fa fa-twitter" aria-hidden="true"></i>
+            <i class="fa fa-instagram" aria-hidden="true"></i> 
+            <i class="fa fa-linkedin" aria-hidden="true"></i>
+        </div>
+        <p>Made with <i class="fa fa-heart-o" aria-hidden="true"></i> by Tech Code All Rights Reserved.</p>
+    </section>
+</body>
+</html>

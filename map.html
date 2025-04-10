@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Bus Tracking</title>
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <h2 id="bus-stop" style="text-align: center; background-color: #1976D2; color: white; padding: 10px;">
+        Bus is at: Unknown Location
+    </h2>
+
+    <script>
+        let map;
+        let marker;
+        let polyline;
+
+        // Bus Stops with Coordinates and Names
+        const busStops = [
+            { name: "Mulund Railway Station (West)", lat: 19.172493734949025, lng: 72.95616566560044 },
+            { name: "Ambaji Dham", lat: 19.178820571160976, lng: 72.94895764444415 },
+            { name: "E.S.I.S Hospital", lat: 19.178676553579688, lng: 72.94498979990995 },
+            { name: "Veena Nagar", lat: 19.182122272352903, lng: 72.94706828882978 },
+            { name: "Santoshi Mata Mandir (Mulund W)", lat: 19.18328117982267, lng: 72.94832348499398 },
+            { name: "R Mall, Mulund", lat: 19.183676258231596, lng: 72.95208405642035 },
+            { name: "Maharana Pratap Chowk", lat: 19.184244760305088, lng: 72.95380620919433 },
+            { name: "LBS Marg", lat: 19.184869027565096, lng: 72.9550116180224 },
+            { name: "Check naka", lat: 19.185474467428204, lng: 72.95576465887197 },
+            { name: "Automatic Company", lat: 19.187176753314446, lng: 72.95534730094457 },
+            { name: "MIDC", lat: 19.190317107739872, lng: 72.95552099792444 },
+            { name: "Road No 12", lat: 19.192467107093474, lng: 72.9551356108609 },
+            { name: "Road Number 16", lat: 19.193810123615314, lng: 72.95363597192922 },
+            { name: "Dwarka hotel", lat: 19.194601173359036, lng: 72.95105630486597 },
+            { name: "22 Circle", lat: 19.19473465197042, lng: 72.94923709217157 },
+            { name: "Sathe nagar", lat: 19.201024253219344, lng: 72.94904346612762 },
+            { name: "Indira nagar", lat: 19.20503526516572, lng: 72.95002481263808 },
+            { name: "Sawarkar nagar", lat: 19.207327809492835, lng: 72.95063547797781 },
+            { name: "Lokmanya Nagar (Thane)", lat: 19.20938340143996, lng: 72.95175942558431 }
+        ];
+
+        // Initialize Google Map
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 19.17882057, lng: 72.94895764 },
+                zoom: 14,
+            });
+
+            drawRoute();
+            fetchBusLocation();
+            setInterval(fetchBusLocation, 5000); // Refresh every 5 seconds
+        }
+
+        // Draw Bus Stops and Route
+        function drawRoute() {
+            polyline = new google.maps.Polyline({
+                path: busStops,
+                geodesic: true,
+                strokeColor: "#FF0000",
+                strokeOpacity: 1.0,
+                strokeWeight: 4,
+            });
+            polyline.setMap(map);
+
+            // Add Numbered Markers for Each Stop
+            busStops.forEach((stop, index) => {
+                new google.maps.Marker({
+                    position: { lat: stop.lat, lng: stop.lng },
+                    map: map,
+                    label: `${index + 1}`,
+                    title: stop.name,
+                });
+            });
+        }
+
+        // Fetch Bus Location from Backend
+        function fetchBusLocation() {
+            // Replace 102 with your desired bus number
+            fetch('fetch_location.php?bus_no=102')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error("Error from server:", data.error);
+                        return;
+                    }
+
+                    const { latitude, longitude } = data;
+                    console.log("Bus location:", latitude, longitude);
+                    updateMap(parseFloat(latitude), parseFloat(longitude));
+                })
+                .catch(error => console.error('Error fetching bus location:', error));
+        }
+
+        // Update Map with Bus Location
+        function updateMap(lat, lng) {
+            if (!marker) {
+                marker = new google.maps.Marker({
+                    position: { lat, lng },
+                    map: map,
+                    draggable: false,
+                    icon: {
+                        url: "https://maps.google.com/mapfiles/ms/icons/bus.png",
+                        scaledSize: new google.maps.Size(40, 40),
+                    },
+                });
+            } else {
+                marker.setPosition({ lat, lng });
+            }
+
+            map.panTo({ lat, lng });
+            updateBusStop(lat, lng);
+        }
+
+        // Find Nearest Bus Stop and Display It
+        function updateBusStop(lat, lng) {
+            let nearestStop = null;
+            let shortestDistance = Infinity;
+            let thresholdDistance = 100; // meters
+
+            busStops.forEach(stop => {
+                const distance = getDistance(lat, lng, stop.lat, stop.lng);
+                console.log(`Distance to ${stop.name}: ${distance.toFixed(2)} meters`);
+
+                if (distance < shortestDistance && distance <= thresholdDistance) {
+                    shortestDistance = distance;
+                    nearestStop = stop.name;
+                }
+            });
+
+            if (nearestStop) {
+                document.getElementById('bus-stop').textContent = `Bus is at: ${nearestStop}`;
+            } else {
+                document.getElementById('bus-stop').textContent = 'Bus is at: Unknown Location';
+            }
+        }
+
+        // Haversine Formula to Calculate Distance
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const φ1 = lat1 * (Math.PI / 180);
+            const φ2 = lat2 * (Math.PI / 180);
+            const Δφ = (lat2 - lat1) * (Math.PI / 180);
+            const Δλ = (lon2 - lon1) * (Math.PI / 180);
+
+            const a = Math.sin(Δφ / 2) ** 2 +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ / 2) ** 2;
+
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+    </script>
+
+    <!-- Google Maps API (Replace with your own key if needed) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=Your_Api_Key&libraries=places&callback=initMap" async defer></script>
+</body>
+</html>
